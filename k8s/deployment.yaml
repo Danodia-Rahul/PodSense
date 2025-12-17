@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: PodSenseDeployment
+  namespace: default
+  labels:
+    app: Projct-PodSense
+spec:
+  selector:
+    matchLabels:
+      app: PodSense-pods
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: PodSense-container
+      labels:
+        app: PodSense-pods
+    spec:
+      containers:
+        - name: PodSense-container
+          image: danodiarahul/pod-sense:v1
+          imagePullPolicy:
+          resources:
+            requests:
+              cpu: 500m
+              memory: 500Mi
+            limits:
+              cpu: 800m
+              memory: 800Mi
+          livenessProbe:
+            tcpSocket:
+              port: 8501
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8501
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 10
+          ports:
+            - containerPort: 8501
+      restartPolicy: Always
