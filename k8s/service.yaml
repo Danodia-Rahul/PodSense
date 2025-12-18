@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: PodSense-Service
+  name: podsense-service
   namespace: default
 spec:
   selector:
-    app: PodSense-pods
+    app: podsense-pods
   type: NodePort
   ports:
     - protocol: TCP

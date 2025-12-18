@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: PodSenseDeployment
+  name: podsense-deployment
   namespace: default
   labels:
     app: Projct-PodSense
 spec:
   selector:
     matchLabels:
-      app: PodSense-pods
+      app: podsense-pods
   replicas: 2
   strategy:
     rollingUpdate:
@@ -18,12 +18,12 @@ spec:
   template:
     metadata:
       annotations:
-        kubectl.kubernetes.io/default-container: PodSense-container
+        kubectl.kubernetes.io/default-container: podsense-container
       labels:
-        app: PodSense-pods
+        app: podsense-pods
     spec:
       containers:
-        - name: PodSense-container
+        - name: podsense-container
           image: danodiarahul/pod-sense:v1
           imagePullPolicy:
           resources:
