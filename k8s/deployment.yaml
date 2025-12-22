@@ -4,7 +4,7 @@ metadata:
   name: podsense-deployment
   namespace: default
   labels:
-    app: Projct-PodSense
+    app: project-podsense
 spec:
   selector:
     matchLabels:
@@ -24,8 +24,8 @@ spec:
     spec:
       containers:
         - name: podsense-container
-          image: danodiarahul/pod-sense:v1
-          imagePullPolicy:
+          image: danodiarahul/pod-sense:v2
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 500m
@@ -34,8 +34,9 @@ spec:
               cpu: 800m
               memory: 800Mi
           livenessProbe:
-            tcpSocket:
-              port: 8501
+            httpGet:
+              path: /health
+              port: 8000
             initialDelaySeconds: 5
             timeoutSeconds: 5
             successThreshold: 1
@@ -43,13 +44,29 @@ spec:
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /
-              port: 8501
+              path: /health
+              port: 8000
             initialDelaySeconds: 5
             timeoutSeconds: 2
             successThreshold: 1
             failureThreshold: 3
             periodSeconds: 10
           ports:
-            - containerPort: 8501
+            - containerPort: 8000
       restartPolicy: Always
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: podsense-service
+  namespace: default
+spec:
+  selector:
+    app: podsense-pods
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+      nodePort: 30001

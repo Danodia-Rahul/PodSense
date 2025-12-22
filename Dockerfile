@@ -2,11 +2,13 @@ FROM python:3.13-slim
 
 WORKDIR /app
 
-COPY model.onnx /app/
-COPY get_response.py /app/
-COPY requirements.txt /app/
-COPY ui.py /app/
+COPY requirements.txt .
 
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["streamlit", "run", "ui.py", "--server.port=8501", "--server.address=0.0.0.0"]
+COPY model.onnx .
+COPY app.py . 
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
