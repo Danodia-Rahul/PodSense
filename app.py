@@ -4,11 +4,12 @@ from io import BytesIO
 import numpy as np
 import onnxruntime as ort
 import requests
-from fastapi import FastAPI, File, Form, HTTPException, Request, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.responses import Response
 from PIL import Image
 from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Gauge, Histogram,
                                generate_latest)
+from pydantic import BaseModel
 from starlette.responses import Response
 
 request_counter = Counter(
@@ -28,6 +29,9 @@ in_flight_request = Gauge(
         "http_request_in_flight",
         "Current in-flight HTTP requests"
 )
+
+class URLReqeust(BaseModel):
+    url: str
 
 app = FastAPI()
 
@@ -114,24 +118,31 @@ def get_prediction(input):
     prediction = output[0][0].tolist()
     return dict(sorted(zip(labels, prediction), key=lambda x: -x[1]))
 
-@app.post("/predict")
-async def get_response(
-    image_url: str | None = Form(None),
-    file: UploadFile | None = File(None)
-):
+
+@app.post("/predict/url")
+async def prefict_from_url(image_url: URLReqeust):
     try:
-        if image_url is None and file is None:
-            raise HTTPException(status_code=400, detail="Provide input as url or file")
-        if image_url:
-            image = image_from_url(image_url)
+        image = image_from_url(image_url.url)
+        input_tensor = preprocess(image)
+        predictions = get_prediction(input_tensor)
+        return {"Response": predictions}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/predict/file")
+async def prefict_from_file(file: UploadFile | None = File(None)):
+    try:
+        if file is None:
+            raise HTTPException(status_code=400, detail="Upload a file")
         else:
             image_bytes = await file.read()
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
-
-        input_tensor = preprocess(image)
-        predictions = get_prediction(input_tensor)
-        return {"predictions": predictions}
-    
+            input_tensor = preprocess(image)
+            predictions = get_prediction(input_tensor)
+            return {"Response": predictions} 
     except HTTPException:
         raise
     except Exception as e:

@@ -9,7 +9,7 @@ spec:
   selector:
     matchLabels:
       app: podsense-pods
-  replicas: 2
+  replicas: 4
   strategy:
     rollingUpdate:
       maxSurge: 25%
@@ -27,16 +27,25 @@ spec:
     spec:
       containers:
         - name: podsense-container
-          image: danodiarahul/pod-sense:v2
+          image: danodiarahul/pod-sense:v3
           imagePullPolicy: Always
           resources:
             requests:
-              cpu: 500m
-              memory: 500Mi
+              cpu: 250m
+              memory: 300Mi
             limits:
-              cpu: 800m
-              memory: 800Mi
+              cpu: 400m
+              memory: 600Mi
           livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 20
+          readinessProbe:
             httpGet:
               path: /health
               port: 8000
@@ -44,16 +53,7 @@ spec:
             timeoutSeconds: 5
             successThreshold: 1
             failureThreshold: 3
-            periodSeconds: 10
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8000
-            initialDelaySeconds: 5
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 3
-            periodSeconds: 10
+            periodSeconds: 15
           ports:
             - containerPort: 8000
       restartPolicy: Always
