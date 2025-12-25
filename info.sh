@@ -9,5 +9,5 @@ PROMETHEUS_SERVER_PORT=$(kubectl get svc -o jsonpath='{.items[?(@.metadata.name=
 echo "prometheus server can be accessed at: http://$NODE_IP:$PROMETHEUS_SERVER_PORT"
 echo "grafana can be accessed at: http://$NODE_IP:$GRAFANA_PORT"
 
-GRAFANA_PASSWORD=$(kctl get secret grafana -o jsonpath='{.data.admin-password}' | base64 --decode)
+GRAFANA_PASSWORD=$(kubectl get secret grafana -o jsonpath='{.data.admin-password}' | base64 --decode)
 echo "grafana login password: $GRAFANA_PASSWORD"
