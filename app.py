@@ -13,27 +13,25 @@ from pydantic import BaseModel
 from starlette.responses import Response
 
 request_counter = Counter(
-        "http_requests_total",
-        "Total HTTP requests",
-        ["method", "path", "status"]
+    "http_requests_total", "Total HTTP requests", ["method", "path", "status"]
 )
 
 request_latency = Histogram(
-        "http_request_duration_second",
-        "HTTP request latency",
-        ["method", "path"],
-        buckets= (0.05, 0.1, 0.2, 0.5, 1, 2, 5)
+    "http_request_duration_second",
+    "HTTP request latency",
+    ["method", "path"],
+    buckets=(0.05, 0.1, 0.2, 0.5, 1, 2, 5),
 )
 
-in_flight_request = Gauge(
-        "http_request_in_flight",
-        "Current in-flight HTTP requests"
-)
+in_flight_request = Gauge("http_request_in_flight", "Current in-flight HTTP requests")
+
 
 class URLReqeust(BaseModel):
     url: str
 
+
 app = FastAPI()
+
 
 @app.middleware("http")
 async def prometheus_middleware(request: Request, call_next):
@@ -47,28 +45,24 @@ async def prometheus_middleware(request: Request, call_next):
         duration = time.time() - start_time
         in_flight_request.dec()
 
-        request_latency.labels(
-            method=request.method,
-            path=request.url.path
-        ).observe(duration)
+        request_latency.labels(method=request.method, path=request.url.path).observe(
+            duration
+        )
 
         request_counter.labels(
-            method=request.method,
-            path=request.url.path,
-            status=response.status_code
+            method=request.method, path=request.url.path, status=response.status_code
         ).inc()
 
+
 @app.get("/metrics")
-def metcris():
-    return Response(
-            generate_latest(),
-            media_type= CONTENT_TYPE_LATEST
-    )
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
 
 def image_from_url(url):
     response = requests.get(url)
@@ -99,6 +93,23 @@ def preprocess(image):
     return img_arr[None, :].astype("float32")
 
 
+try:
+    session = ort.InferenceSession("model.onxx")
+    model_ready = True
+except Exception as e:
+    model_ready = False
+    model_error = str(e)
+    session = None
+
+
+@app.get("/ready")
+def ready():
+    if model_ready and session is not None:
+        return {"status": "ok"}
+    else:
+        raise HTTPException(status_code=400, detail=model_error)
+
+
 def get_prediction(input):
     session = ort.InferenceSession("model.onnx")
     output = session.run(None, {"input": input})
@@ -113,7 +124,7 @@ def get_prediction(input):
         "shorts",
         "skirt",
         "t-shirt",
-        ]
+    ]
 
     prediction = output[0][0].tolist()
     return dict(sorted(zip(labels, prediction), key=lambda x: -x[1]))
@@ -142,7 +153,7 @@ async def prefict_from_file(file: UploadFile | None = File(None)):
             image = Image.open(BytesIO(image_bytes)).convert("RGB")
             input_tensor = preprocess(image)
             predictions = get_prediction(input_tensor)
-            return {"Response": predictions} 
+            return {"Response": predictions}
     except HTTPException:
         raise
     except Exception as e:

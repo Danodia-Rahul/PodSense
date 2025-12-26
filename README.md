@@ -16,7 +16,7 @@ helm repo up
 
 ```bash
 helm install prometheus prometheus-community/prometheus
-helm install grafana
+helm install grafana grafana/grafana
 ```
 
 ### Once these both are up and running, expose prometheus-server and grafana
