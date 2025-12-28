@@ -94,7 +94,7 @@ def preprocess(image):
 
 
 try:
-    session = ort.InferenceSession("model.onxx")
+    session = ort.InferenceSession("model.onnx")
     model_ready = True
 except Exception as e:
     model_ready = False
