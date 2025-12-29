@@ -1,10 +1,11 @@
 import time
 from io import BytesIO
 
+import httpx
 import numpy as np
 import onnxruntime as ort
-import requests
 from fastapi import FastAPI, File, HTTPException, Request, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import Response
 from PIL import Image
 from prometheus_client import (CONTENT_TYPE_LATEST, Counter, Gauge, Histogram,
@@ -20,13 +21,13 @@ request_latency = Histogram(
     "http_request_duration_second",
     "HTTP request latency",
     ["method", "path"],
-    buckets=(0.05, 0.1, 0.2, 0.5, 1, 2, 5),
+    buckets=(0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10),
 )
 
 in_flight_request = Gauge("http_request_in_flight", "Current in-flight HTTP requests")
 
 
-class URLReqeust(BaseModel):
+class URLRequest(BaseModel):
     url: str
 
 
@@ -37,7 +38,7 @@ app = FastAPI()
 async def prometheus_middleware(request: Request, call_next):
     in_flight_request.inc()
     start_time = time.time()
-
+    response = None
     try:
         response = await call_next(request)
         return response
@@ -49,8 +50,9 @@ async def prometheus_middleware(request: Request, call_next):
             duration
         )
 
+        status = response.status_code if response else 500
         request_counter.labels(
-            method=request.method, path=request.url.path, status=response.status_code
+            method=request.method, path=request.url.path, status=status
         ).inc()
 
 
@@ -64,13 +66,42 @@ def health():
     return {"status": "ok"}
 
 
-def image_from_url(url):
-    response = requests.get(url)
-    response.raise_for_status()
+def read_image(img_data):
+    return Image.open(img_data).convert("RGB")
 
-    img_data = BytesIO(response.content)
-    img = Image.open(img_data).convert("RGB")
-    return img
+
+async def image_from_url(image_url: str):
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(image_url)
+            response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "")
+        if not content_type.startswith("image/"):
+            raise HTTPException(
+                status_code=400,
+                detail="URL did not return an image",
+            )
+
+        return read_image(BytesIO(response.content))
+
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(
+            status_code=e.response.status_code,
+            detail=f"HTTP error fetching image: {e.response.text}",
+        )
+
+    except httpx.RequestError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Request failed: {type(e).__name__}: {e}",
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unexpected error: {type(e).__name__}: {e}",
+        )
 
 
 def preprocess(image):
@@ -111,7 +142,6 @@ def ready():
 
 
 def get_prediction(input):
-    session = ort.InferenceSession("model.onnx")
     output = session.run(None, {"input": input})
     labels = [
         "dress",
@@ -131,11 +161,11 @@ def get_prediction(input):
 
 
 @app.post("/predict/url")
-async def prefict_from_url(image_url: URLReqeust):
+async def prefict_from_url(image_url: URLRequest):
     try:
-        image = image_from_url(image_url.url)
-        input_tensor = preprocess(image)
-        predictions = get_prediction(input_tensor)
+        image = await image_from_url(image_url.url)
+        input_tensor = await run_in_threadpool(preprocess, image)
+        predictions = await run_in_threadpool(get_prediction, input_tensor)
         return {"Response": predictions}
     except HTTPException:
         raise
@@ -150,9 +180,9 @@ async def prefict_from_file(file: UploadFile | None = File(None)):
             raise HTTPException(status_code=400, detail="Upload a file")
         else:
             image_bytes = await file.read()
-            image = Image.open(BytesIO(image_bytes)).convert("RGB")
-            input_tensor = preprocess(image)
-            predictions = get_prediction(input_tensor)
+            image = await run_in_threadpool(read_image, BytesIO(image_bytes))
+            input_tensor = await run_in_threadpool(preprocess, image)
+            predictions = await run_in_threadpool(get_prediction, input_tensor)
             return {"Response": predictions}
     except HTTPException:
         raise

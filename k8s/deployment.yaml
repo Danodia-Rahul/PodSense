@@ -25,9 +25,13 @@ spec:
       labels:
         app: podsense-pods
     spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       containers:
         - name: podsense-container
-          image: danodiarahul/pod-sense:v3
+          image: danodiarahul/pod-sense:v5
           imagePullPolicy: Always
           resources:
             requests:
