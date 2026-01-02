@@ -26,6 +26,18 @@ request_latency = Histogram(
 
 in_flight_request = Gauge("http_request_in_flight", "Current in-flight HTTP requests")
 
+download_time_histogram = Histogram(
+    "http_image_download_duration_seconds",
+    "Time taken to download url image",
+    buckets=(0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5),
+)
+
+inference_time_histogram = Histogram(
+    "http_infrence_duration_seconds",
+    "Time taken for model infernece",
+    buckets=(0.2, 0.4, 0.6, 0.8, 1, 2, 5),
+)
+
 
 class URLRequest(BaseModel):
     url: str
@@ -71,11 +83,14 @@ def read_image(img_data):
 
 
 async def image_from_url(image_url: str):
+    start_time = time.time()
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
+
             response = await client.get(image_url)
             response.raise_for_status()
 
+        download_time_histogram.observe(time.time() - start_time)
         content_type = response.headers.get("Content-Type", "")
         if not content_type.startswith("image/"):
             raise HTTPException(
@@ -142,7 +157,9 @@ def ready():
 
 
 def get_prediction(input):
+    start_time = time.time()
     output = session.run(None, {"input": input})
+    inference_time_histogram.observe(time.time() - start_time)
     labels = [
         "dress",
         "hat",

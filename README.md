@@ -54,10 +54,22 @@ hey -disable-keepalive -n 50 -c 10 \
 ### Generating traffci with hey with ingress
 
 ```bash
-hey -disable-keepalive -n 50 -c 10 \
+hey -disable-keepalive -n 200 -c 10 \
     -m POST \
     -H "Content-Type: application/json" \
     -d '{"url":"https://static.vecteezy.com/system/resources/previews/045/926/094/non_2x/a-hat-isolated-on-white-background-vector.jpg"}' \
     http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'): \
-    $(kctl get svc nginx-ingress-ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')/predict/url
+    $(kubectl get svc nginx-ingress-ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')/predict/url
+```
+
+### Get the latency with `PROMQL` on prometheus-server
+
+```bash
+  histogram_quantile(0.95, sum by(le) (rate(http_request_duration_second_bucket[10m])))
+```
+
+### Get throttling on prometheus-server
+
+```bash
+rate(container_cpu_cfs_throttled_seconds_total[10m]) / rate(container_cpu_cfs_throttled_periods_total[10m])
 ```
