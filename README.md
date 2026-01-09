@@ -8,7 +8,6 @@ kind create cluster --name project-podsense
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-helm repo add grafana https://grafana.github.io/helm-charts
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo up
 ```
@@ -16,16 +15,15 @@ helm repo up
 ### Deploy prometheus, grafana and nginx-ingress to cluster.
 
 ```bash
-helm install prometheus prometheus-community/prometheus
-helm install grafana grafana/grafana
+helm install prometheus prometheus-community/kube-prometheus-stack
 helm install nginx-ingress ingress-nginx/ingress-nginx --set controller.service.type=NodePort
 ```
 
 ### Once these both are up and running, expose prometheus-server and grafana
 
 ```bash
-kubectl expose service prometheus-server --type=NodePort --target-port=9090 --name=prometheus-server-ext
-kubectl expose service grafana --type=NodePort --target-port=3000 --name=grafana-ext
+kubectl port-forward svc/prometheus-grafana 3000:80
+kctl port-forward svc/prometheus-kube-prometheus-prometheus 9090:9090
 ```
 
 ### Deploy application and Ingress

@@ -19,9 +19,6 @@ spec:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: podsense-container
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/metrics"
-        prometheus.io/port: "8000"
       labels:
         app: podsense-pods
     spec:
@@ -32,7 +29,7 @@ spec:
       containers:
         - name: podsense-container
           image: danodiarahul/pod-sense:v7
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: 250m
@@ -73,7 +70,29 @@ spec:
     app: podsense-pods
   type: NodePort
   ports:
-    - protocol: TCP
+    - name: http-metrics
+      protocol: TCP
       port: 80
       targetPort: 8000
       nodePort: 30001
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: podsense-servicemonitor
+  namespace: default
+  labels:
+    release: prometheus-operator
+spec:
+  selector:
+    matchLabels:
+      app: podsense-pods
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http-metrics
+      interval: 30s
+      path: /metrics
+      scheme: http
