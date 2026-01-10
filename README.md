@@ -33,7 +33,7 @@ kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/ingress.yaml
 ```
 
-### Get information
+### Get information for grafana
 
 ```bash
 ./info.sh
@@ -49,15 +49,14 @@ hey -disable-keepalive -n 50 -c 10 \
     http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'):30001/predict/url
 ```
 
-### Generating traffci with hey with ingress
+### Generating traffic with ingress
 
 ```bash
 hey -disable-keepalive -n 200 -c 10 \
     -m POST \
     -H "Content-Type: application/json" \
     -d '{"url":"https://static.vecteezy.com/system/resources/previews/045/926/094/non_2x/a-hat-isolated-on-white-background-vector.jpg"}' \
-    http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'): \
-    $(kubectl get svc nginx-ingress-ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')/predict/url
+    http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'):$(kubectl get svc nginx-ingress-ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')/predict/url
 ```
 
 ### Get the latency with `PROMQL` on prometheus-server

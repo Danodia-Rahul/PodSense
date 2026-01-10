@@ -65,6 +65,8 @@ kind: Service
 metadata:
   name: podsense-service
   namespace: default
+  labels:
+    app: podsense-service
 spec:
   selector:
     app: podsense-pods
@@ -83,16 +85,16 @@ metadata:
   name: podsense-servicemonitor
   namespace: default
   labels:
-    release: prometheus-operator
+    release: prometheus
 spec:
   selector:
     matchLabels:
-      app: podsense-pods
+      app: podsense-service
   namespaceSelector:
     matchNames:
       - default
   endpoints:
     - port: http-metrics
-      interval: 30s
+      interval: 15s
       path: /metrics
       scheme: http
