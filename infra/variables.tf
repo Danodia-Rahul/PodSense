@@ -48,7 +48,32 @@ variable "private_route_table" {
   description = "private route table name"
 }
 
-variable "security_group" {
+variable "cluster_security_group" {
   type        = string
-  description = "security group name"
+  description = "cluster security group name"
+}
+
+variable "node_security_group" {
+  type        = string
+  description = "node security group name"
+}
+
+variable "cluster_name" {
+  type        = string
+  description = "eks cluster name"
+}
+
+variable "cluster_role_name" {
+  type        = string
+  description = "eks cluster role name"
+}
+
+variable "node_group_name" {
+  type        = string
+  description = "eks worker node group name"
+}
+
+variable "worker_role_name" {
+  type        = string
+  description = "eks worker role name"
 }
