@@ -77,3 +77,13 @@ variable "worker_role_name" {
   type        = string
   description = "eks worker role name"
 }
+
+variable "prometheus_resource" {
+  type        = string
+  description = "prometheus resource name for eks cluster"
+}
+
+variable "monitoring_namespace" {
+  type        = string
+  description = "monitoring namesapce name"
+}

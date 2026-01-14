@@ -13,9 +13,9 @@ resource "aws_subnet" "public_subnet_1" {
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = true
   tags = {
-    Name                                            = var.public_subnet_1
-    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                        = "1"
+    Name                                        = var.public_subnet_1
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                    = "1"
   }
 }
 
@@ -25,9 +25,9 @@ resource "aws_subnet" "public_subnet_2" {
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = true
   tags = {
-    Name                                            = var.public_subnet_2
-    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
-    "kubernetes.io/role/elb"                        = "1"
+    Name                                        = var.public_subnet_2
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/elb"                    = "1"
   }
 }
 
@@ -37,9 +37,9 @@ resource "aws_subnet" "private_subnet_1" {
   availability_zone       = "us-east-1a"
   map_public_ip_on_launch = false
   tags = {
-    Name                                            = var.private_subnet_1
-    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"               = "1"
+    Name                                        = var.private_subnet_1
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"           = "1"
   }
 }
 
@@ -49,9 +49,9 @@ resource "aws_subnet" "private_subnet_2" {
   availability_zone       = "us-east-1b"
   map_public_ip_on_launch = false
   tags = {
-    Name                                            = var.private_subnet_2
-    "kubernetes.io/cluster/${var.eks_cluster_name}" = "shared"
-    "kubernetes.io/role/internal-elb"               = "1"
+    Name                                        = var.private_subnet_2
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "kubernetes.io/role/internal-elb"           = "1"
   }
 }
 
