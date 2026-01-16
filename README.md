@@ -59,6 +59,12 @@ hey -disable-keepalive -n 200 -c 10 \
     http://$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}'):$(kubectl get svc nginx-ingress-ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.name=="http")].nodePort}')/predict/url
 ```
 
+### Working with AWS
+
+```
+
+```
+
 ### Get the latency with `PROMQL` on prometheus-server
 
 ```bash

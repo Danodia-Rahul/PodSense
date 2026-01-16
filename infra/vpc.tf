@@ -162,6 +162,12 @@ resource "aws_vpc_security_group_ingress_rule" "node_ingress_from_node" {
   ip_protocol                  = "-1"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "node_ingress_from_vpc" {
+  security_group_id = aws_security_group.node_sg.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = aws_vpc.eks_vpc.cidr_block
+}
+
 resource "aws_vpc_security_group_ingress_rule" "node_ingress_from_cluster" {
   security_group_id            = aws_security_group.node_sg.id
   referenced_security_group_id = aws_security_group.cluster_sg.id
