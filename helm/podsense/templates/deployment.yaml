@@ -1,0 +1,94 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{.Values.deployment.name}}
+  labels:
+    app: {{ .Values.deployment.label }}
+spec:
+  selector:
+    matchLabels:
+      app: {{.Values.app}}
+  replicas: {{.Values.replica}}
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: {{.Values.containers.name}}
+      labels:
+        app: {{.Values.app}}
+    spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      containers:
+        - name: {{.Values.containers.name}}
+          image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 250m
+              memory: 250Mi
+            limits:
+              cpu: 400m
+              memory: 350Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            timeoutSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8000
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+            periodSeconds: 15
+          ports:
+            - containerPort: 8000
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{.Values.service.name}}
+  labels:
+    app: {{.Values.service.label}}
+spec:
+  selector:
+    app: {{.Values.app}}
+  type: LoadBalancer
+  ports:
+    - name: http-metrics
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{.Values.serviceMonitor.name}}
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: {{.Values.service.label}}
+  namespaceSelector:
+    matchNames:
+      - {{.Release.Namespace}} 
+  endpoints:
+    - port: http-metrics
+      interval: 15s
+      path: /metrics
+      scheme: http
