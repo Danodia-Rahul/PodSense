@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: podsense-deployment
-  namespace: default
+  namespace: podsense
   labels:
     app: project-podsense
 spec:
@@ -64,7 +64,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: podsense-service
-  namespace: default
+  namespace: podsense
   labels:
     app: podsense-service
 spec:
@@ -83,7 +83,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: podsense-servicemonitor
-  namespace: default
+  namespace: monitoring
   labels:
     release: prometheus
 spec:
@@ -92,7 +92,7 @@ spec:
       app: podsense-service
   namespaceSelector:
     matchNames:
-      - default
+      - podsense
   endpoints:
     - port: http-metrics
       interval: 15s

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{.Values.deployment.name}}
+  namespace: {{.Values.deployment.namespace}}
   labels:
     app: {{ .Values.deployment.label }}
 spec:
@@ -62,22 +63,27 @@ apiVersion: v1
 kind: Service
 metadata:
   name: {{.Values.service.name}}
+  namespace: {{.Values.service.namespace}}
   labels:
     app: {{.Values.service.label}}
 spec:
   selector:
     app: {{.Values.app}}
-  type: LoadBalancer
+  type: {{.Values.service.type | default "ClusterIP"}}
   ports:
     - name: http-metrics
       protocol: TCP
       port: 80
       targetPort: 8000
+	  {{- if eq .Values.service.type "NodePort"}}
+      nodePort: {{.Values.service.nodeport}}
+	  {{- end}}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{.Values.serviceMonitor.name}}
+  namespace: {{.Values.serviceMonitor.namespace}}
   labels:
     release: prometheus
 spec:
@@ -86,7 +92,7 @@ spec:
       app: {{.Values.service.label}}
   namespaceSelector:
     matchNames:
-      - {{.Release.Namespace}} 
+      - {{.Values.service.namespace}} 
   endpoints:
     - port: http-metrics
       interval: 15s

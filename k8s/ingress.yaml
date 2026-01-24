@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: podsense-ingress
-  namespace: default
+  namespace: ingress
 spec:
   ingressClassName: nginx
   rules:

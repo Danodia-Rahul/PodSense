@@ -2,8 +2,13 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Values.ingress.name }}
+  namespace: {{ .Values.ingress.namespace }}
+  {{- if eq .Values.platform "eks" }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+  {{- end }}
 spec:
-  ingressClassName: nginx
+  ingressClassName: {{ if eq .Values.platform "eks" }}alb{{ else }}nginx{{ end }}
   rules:
     - http:
         paths:
@@ -14,3 +19,4 @@ spec:
                 name: {{ .Values.service.name }}
                 port:
                   number: 80
+

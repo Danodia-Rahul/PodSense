@@ -7,3 +7,10 @@ __pycache__/
 .git/
 prometheus-manifests/
 values.yaml
+
+.terraform/
+.terrafor.lock.hcl
+.terraform.tfstate
+.terraform.tfstate.backup
+
+

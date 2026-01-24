@@ -61,6 +61,7 @@ resource "aws_internet_gateway" "igw" {
     Name = var.internet_gateway
   }
 }
+
 resource "aws_eip" "nat_eip" {
   domain = "vpc"
   tags = {
