@@ -5,3 +5,7 @@ GRAFANA_PASSWORD=$(kubectl get secret prometheus-grafana -n monitoring -o jsonpa
 
 echo "grafana login username: $GRAFANA_USERNAME"
 echo "grafana login password: $GRAFANA_PASSWORD"
+
+APPLICATION_ADDR=$(kubectl get svc ingress-ingress-nginx-controller -n podsense -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+
+echo "application address: http://$APPLICATION_ADDR/docs"

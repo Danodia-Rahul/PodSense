@@ -2,13 +2,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Values.ingress.name }}
-  namespace: {{ .Values.ingress.namespace }}
-  {{- if eq .Values.platform "eks" }}
-  annotations:
-    kubernetes.io/ingress.class: alb
-  {{- end }}
 spec:
-  ingressClassName: {{ if eq .Values.platform "eks" }}alb{{ else }}nginx{{ end }}
+  ingressClassName: nginx
   rules:
     - http:
         paths:
