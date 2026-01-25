@@ -208,6 +208,7 @@ kubectl get nodes
 ### 3. Deploy NGINX Ingress Controller
 
 ```bash
+cd ..
 kubectl create namespace podsense
 helm install ingress ingress-nginx/ingress-nginx \
   -n podsense \
@@ -247,5 +248,9 @@ kubectl delete svc --all -A
 kubectl config delete-context $(kubectl config get-context -o name | grep podsense)
 kubectl config delete-user $(kubectl config get-users -o name | grep podsense)
 ```
-
+### Destroy infra 
+```bash
+cd infra/
+terraform destroy --auto-approve
+```
 ---
