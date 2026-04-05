@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ .Values.ingress.name }}
+  namespace: {{ .Values.service.namespace }}
 spec:
   ingressClassName: nginx
   rules:
@@ -14,4 +15,3 @@ spec:
                 name: {{ .Values.service.name }}
                 port:
                   number: 80
-
